@@ -145,17 +145,8 @@ function calcOds(m,n,r){
       o[j]=m[i][j].foot
     }
   }
-  if (o[o.length-1].value==1){
-    o[o.length-1]=o[o.length-1].head
-    delete o[o.length-1].foot
-  }
-  for (var i=0;i<o.length-1;i++){
-    while (compareRow(o[i].row,o[o.length-1].row)>0){
-      o[i]=o[i].head
-      delete o[i].foot
-    }
-  }
-  m=m.splice(getRowIndex(m,o[o.length-1].row)+1)
+  if (o[o.length-1].value==1) o[o.length-1]=o[o.length-1].head
+  o[o[o.length-1].parent.cloumn]=o[o.length-1].parent
   return o
 }
 function rowAddition(r1,r2){
