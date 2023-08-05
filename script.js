@@ -156,7 +156,14 @@ function calcOds(m,n,r){
     }
     m=m.splice(getRowIndex(m,o[o.length-1].row)+1)
   }
-  o[o[o.length-1].parent.cloumn]=o[o.length-1].parent
+  else{
+    var idx=o[o.length-1].cloumn
+    while (o[idx].parent.cloumn>=0){
+      o[o[idx].parent.cloumn]=o[idx].parent
+      idx=o[idx].parent.cloumn
+    }
+  }
+  //o[o[o.length-1].parent.cloumn]=o[o.length-1].parent
   return o
 }
 function rowAddition(r1,r2){
