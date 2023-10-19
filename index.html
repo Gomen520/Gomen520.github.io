@@ -3,19 +3,19 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>n-Y Sequence</title>
+  <title>X-Y Sequence</title>
   <script src="./script.js"></script>
 </head>
 <body>
-  <h1>n-Y Sequence</h1>
+  <h1>X-Y Sequence</h1>
   <form name=form>
-    <textarea id="input" style="width:calc(100% - 8px);height:calc(100% - 28px);text-align:left;white-space:nowrap;margin:0;border:1px solid black;resize:both;font-family:monospace;font-size:13.5px;padding:4px;" oninput="requestAnimationFrame(expandall)" contentEditable>1,3</textarea>
+    <textarea id="input" style="width:calc(100% - 8px);height:calc(100% - 28px);text-align:left;white-space:nowrap;margin:0;border:1px solid black;resize:both;font-family:monospace;font-size:13.5px;padding:4px;" oninput="requestAnimationFrame(expandall)" contentEditable>1,4,5,4</textarea>
     <input id="inputn" type="text" oninput="requestAnimationFrame(expandall)" value="3">
-    <input id="inputr" type="text" oninput="requestAnimationFrame(expandall)" value="0">
+    <input id="inputd" type="text" oninput="requestAnimationFrame(expandall)" value="1,0,1">
   </form>
   <textarea id="output" style="width:calc(100% - 8px);height:calc(100% - 28px);text-align:left;white-space:pre;margin:0;border:1px solid black;resize:both;font-family:monospace;font-size:13.5px;padding:4px;" readonly></textarea>
-  <div>"n-Y sequence designed by Gomen"</div>
-  <div>Version 1.0.1</div>
+  <div>"X-Y sequence designed by Gomen"</div>
+  <div>Version 1.0</div>
   <div id="mt"></div>
 </body>
 </html>
