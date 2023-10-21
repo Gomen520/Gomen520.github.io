@@ -16,7 +16,7 @@ function displayMt(m){
   for (var i=0;i<m.length;i++){
     mt+='<tr>'
     mt+='<td align="center" width="80" bgColor="#e9e0e0">'+m[i][0].row.slice(0,10)+'</td>'
-    for (var j=0;j<m[m.length-1].length;j++){
+    for (var j=0;j<m[0].length;j++){
       var v=m[i].length>j&&m[i][j].value?m[i][j].value:''
       mt+='<td align="center" width="80" bgColor="#e0eee0">'+v+'</td>'
     }
@@ -190,7 +190,7 @@ function expand(s,n,d,f){
   var it=t,ex=[]
   if (t.value-b.value>1){
     o.forEach(e=>{ex.push({value:e.value,row:[1],cloumn:e.cloumn,parent:e.parent.cloumn==-1?{row:[1],cloumn:-1,no:0}:ex[e.parent.cloumn]})})
-    ex=expand(ex,n,d,true)
+    ex=expand(ex,n,d,f)
     len=(ex.length-o.length)/n
     b=o[t.cloumn-len]
   }
