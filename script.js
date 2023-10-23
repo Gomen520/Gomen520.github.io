@@ -82,13 +82,6 @@ function calcFoot(it){
   foot.parent=p
   return foot
 }
-function calcHeadRow(it,r){
-  var row=rowDifference(it.row,r.row).slice()
-  row.pop()
-  if (row.length==0) row.push(0)
-  row=rowAddition(r.row,row)
-  return row
-}
 function preprocess(m,o){
   var t=o[o.length-1]
   if (t.value==1){
@@ -158,7 +151,7 @@ function calcMaxCopyrow(m,b,t,o,it,dim_seq,index,i){
   while (p.no>it.no) p=p.head
   var diff=rowDifference(it.row,p.row).slice()
   if (p.no==b.no&&diff.length==t.row.length) while (diff.length<dim_seq[index+i+1]) diff.splice(1,0,0)
-  else if (false&&p.no==b.no&&diff.length>=b.row.length){
+  else if (p.no==b.no&&diff.length>=b.row.length){
     var n=diff.length-b.row.length
     while (diff.length<dim_seq[index+i]+n) diff.splice(1,0,0)
   }
@@ -167,7 +160,7 @@ function calcMaxCopyrow(m,b,t,o,it,dim_seq,index,i){
   while (p.no>it.no) p=p.head
   return rowAddition(p.row,diff)
 }
-function copyItems(m,it,head,max_row){
+function copyItem(m,it,head,max_row){
   var row={}
   while (true){
     row=calcFootRow(head)
@@ -203,7 +196,7 @@ function expand(s,n,d,f){
       insertItem(m,head)
       //displayMt(m)
       while (true){
-        head=copyItems(m,it,head,max_row)
+        head=copyItem(m,it,head,max_row)
         if ('foot' in it){
           it=it.foot
           head.foot={value:ex.length?ex[j+len*i+len]:it.value,row:calcFootRow(head),cloumn:head.cloumn,no:it.no,parent:it.parent,head:head}
