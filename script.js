@@ -197,8 +197,7 @@ function expand(s,n,d,f){
   for (it.value--;'head' in it;it=it.head) it.head.value--
   for (var i=0;i<n;i++){
     for (var j=b.cloumn+1;j<=t.cloumn;j++){
-      var it=m[0][j],head={value:1,row:[1],cloumn:j+len*i+len,no:it.no,parent:it.parent}
-      console.log(it)
+      var it=m[0][j],head={row:[1],cloumn:j+len*i+len,no:it.no,parent:it.parent}
       var max_row=calcMaxCopyrow(m,b,t,o,it,dim_seq,index,i)
       if (head.parent.cloumn>=b.cloumn) head.parent=m[0][head.parent.cloumn+len*i+len]
       insertItem(m,head)
@@ -207,7 +206,7 @@ function expand(s,n,d,f){
         head=copyItems(m,it,head,max_row)
         if ('foot' in it){
           it=it.foot
-          head.foot={value:1,row:calcFootRow(head),cloumn:head.cloumn,no:it.no,parent:it.parent,head:head}
+          head.foot={value:ex.length?ex[j+len*i+len]:it.value,row:calcFootRow(head),cloumn:head.cloumn,no:it.no,parent:it.parent,head:head}
           head=head.foot
           max_row=calcMaxCopyrow(m,b,t,o,it,dim_seq,index,i)
           insertItem(m,head)
@@ -225,7 +224,7 @@ function expand(s,n,d,f){
         }
         else {
           o.push(head)
-          head.value=it.value
+          head.value=ex.length?ex[j+len*i+len]:it.value
           while ('head' in head){
             head.head.value=head.value+head.head.parent.value
             //displayMt(m)
