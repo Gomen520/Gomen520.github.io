@@ -158,7 +158,7 @@ function calcMaxCopyrow(m,b,t,o,it,dim_seq,index,i){
   while (p.no>it.no) p=p.head
   var diff=rowDifference(it.row,p.row).slice()
   if (p.no==b.no&&diff.length==t.row.length) while (diff.length<dim_seq[index+i+1]) diff.splice(1,0,0)
-  else if (p.no==b.no&&diff.length>=b.row.length){
+  else if (false&&p.no==b.no&&diff.length>=b.row.length){
     var n=diff.length-b.row.length
     while (diff.length<dim_seq[index+i]+n) diff.splice(1,0,0)
   }
@@ -167,16 +167,16 @@ function calcMaxCopyrow(m,b,t,o,it,dim_seq,index,i){
   while (p.no>it.no) p=p.head
   return rowAddition(p.row,diff)
 }
-function copyItem(m,foot,r,min_row,no){
+function copyItems(m,it,head,max_row){
+  var row={}
   while (true){
-    if (compareRow(foot.row,[1])==0) return foot
-    while (compareRow(foot.row,r.row)<=0) r=r.head
-    var row=calcHeadRow(foot,r)
-    if (compareRow(row,min_row)<=0) return foot
-    foot.head={value:foot.value+r.value,row:row,cloumn:foot.cloumn,foot:foot,no:no}
-    foot=foot.head
-    insertItem(m,foot)
+    row=calcFootRow(head)
+    if (compareRow(row,max_row)>0) return head
+    head.foot={value:1,row:row,cloumn:head.cloumn,no:head.no,head:head,parent:head.parent}
+    if ('foot' in head.parent&&compareRow(head.parent.foot.row,head.foot.row)<=0) head.foot.parent=head.foot.parent.foot
+    insertItem(m,head.foot)
     //displayMt(m)
+    head=head.foot
   }
 }
 function expand(s,n,d,f){
@@ -197,19 +197,42 @@ function expand(s,n,d,f){
   for (it.value--;'head' in it;it=it.head) it.head.value--
   for (var i=0;i<n;i++){
     for (var j=b.cloumn+1;j<=t.cloumn;j++){
-      var it=o[j],foot={value:ex.length?ex[j+len*i+len]:it.value,row:calcMaxCopyrow(m,b,t,o,it,dim_seq,index,i),cloumn:j+len*i+len,no:it.no}
-      o.push(foot)
-      insertItem(m,foot)
+      var it=m[0][j],head={value:1,row:[1],cloumn:j+len*i+len,no:it.no,parent:it.parent}
+      console.log(it)
+      var max_row=calcMaxCopyrow(m,b,t,o,it,dim_seq,index,i)
+      if (head.parent.cloumn>=b.cloumn) head.parent=m[0][head.parent.cloumn+len*i+len]
+      insertItem(m,head)
       //displayMt(m)
       while (true){
-        var min_row=[0],max_row=calcMaxCopyrow(m,b,t,o,it,dim_seq,index,i)
-        if (compareRow(it.row,[1])>0) min_row=calcMaxCopyrow(m,b,t,o,it.head,dim_seq,index,i)
-        var c=it.parent.cloumn,r={value:1,row:[1],cloumn:-1}
-        if (c>=b.cloumn) c+=len*i+len
-        if (c>=0) r=o[c]
-        foot=copyItem(m,foot,r,min_row,it.no)
-        if (compareRow(it.row,[1])==0) break
-        it=it.head
+        head=copyItems(m,it,head,max_row)
+        if ('foot' in it){
+          it=it.foot
+          head.foot={value:1,row:calcFootRow(head),cloumn:head.cloumn,no:it.no,parent:it.parent,head:head}
+          head=head.foot
+          max_row=calcMaxCopyrow(m,b,t,o,it,dim_seq,index,i)
+          insertItem(m,head)
+          //displayMt(m)
+          if (head.parent.cloumn<0){
+            o.push(head)
+            while ('head' in head){
+              head.head.value=head.value+head.head.parent.value
+              head=head.head
+            }
+            break
+          }
+          else if (head.parent.cloumn>=b.cloumn) head.parent=m[0][head.parent.cloumn+len*i+len]
+          while ('foot' in head.parent&&compareRow(head.parent.foot.row,head.row)<=0) head.parent=head.parent.foot
+        }
+        else {
+          o.push(head)
+          head.value=it.value
+          while ('head' in head){
+            head.head.value=head.value+head.head.parent.value
+            //displayMt(m)
+            head=head.head
+          }
+          break
+        }
       }
     }
   }
