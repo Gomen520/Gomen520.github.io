@@ -151,10 +151,6 @@ function calcMaxCopyrow(m,b,t,o,it,dim_seq,index,i){
   while (p.no>it.no) p=p.head
   var diff=rowDifference(it.row,p.row).slice()
   if (p.no==b.no&&diff.length==t.row.length) while (diff.length<dim_seq[index+i+1]) diff.splice(1,0,0)
-  else if (p.no==b.no&&diff.length>=b.row.length){
-    var n=diff.length-b.row.length
-    while (diff.length<dim_seq[index+i]+n&&dim_seq[index+i]+n<dim_seq[index+i+1]) diff.splice(1,0,0)
-  }
   if (diff.length==0) diff.push(0)
   p=o[t.cloumn+len*i]
   while (p.no>it.no) p=p.head
@@ -182,7 +178,7 @@ function expand(s,n,d,f){
   if (f) displayMt(m)
   var it=t,ex=[]
   if (t.value-b.value>1){
-    o.forEach(e=>{ex.push({value:e.value,row:[1],cloumn:e.cloumn,parent:e.parent.cloumn==-1?{row:[1],cloumn:-1,no:0}:ex[e.parent.cloumn]})})
+    o.forEach(e=>{ex.push({value:e.value,row:[0],cloumn:e.cloumn,parent:e.parent.cloumn==-1?{row:[0],cloumn:-1,no:0}:ex[e.parent.cloumn]})})
     ex=expand(ex,n,d,f)
     len=(ex.length-o.length)/n
     b=o[t.cloumn-len]
@@ -190,7 +186,7 @@ function expand(s,n,d,f){
   for (it.value--;'head' in it;it=it.head) it.head.value--
   for (var i=0;i<n;i++){
     for (var j=b.cloumn+1;j<=t.cloumn;j++){
-      var it=m[0][j],head={row:[1],cloumn:j+len*i+len,no:it.no,parent:it.parent}
+      var it=m[0][j],head={row:[0],cloumn:j+len*i+len,no:it.no,parent:it.parent}
       var max_row=calcMaxCopyrow(m,b,t,o,it,dim_seq,index,i)
       if (head.parent.cloumn>=b.cloumn) head.parent=m[0][head.parent.cloumn+len*i+len]
       insertItem(m,head)
@@ -234,8 +230,8 @@ function expand(s,n,d,f){
 function toSequence(s){
   var seq=[]
   for (var i=0;i<s.length;i++){
-    if (s[i]<=1) {seq.push({value:s[i],row:[1],cloumn:i,parent:{row:[1],cloumn:-1}});continue}
-    for (var j=i-1;j>=0;j--) if (s[j]<s[i]) {seq.push({value:s[i],row:[1],cloumn:i,parent:seq[j]});break}
+    if (s[i]<=1) {seq.push({value:s[i],row:[0],cloumn:i,parent:{row:[0],cloumn:-1}});continue}
+    for (var j=i-1;j>=0;j--) if (s[j]<s[i]) {seq.push({value:s[i],row:[0],cloumn:i,parent:seq[j]});break}
   }
   return seq
 }
