@@ -151,7 +151,7 @@ function calcMaxCopyrow(m,b,t,o,it,dim_seq,index,i){
   while (p.no>it.no) p=p.head
   var diff=rowDifference(it.row,p.row).slice()
   if (p.no==b.no&&diff.length==t.row.length) while (diff.length<dim_seq[index+i+1]) diff.splice(1,0,0)
-  else if (p.no==b.no&&diff.length>=b.row.length){
+  else if (false&&p.no==b.no&&diff.length>=b.row.length){
     var n=diff.length-b.row.length
     while (diff.length<dim_seq[index+i]+n) diff.splice(1,0,0)
   }
