@@ -31,6 +31,7 @@ function getRowIndex(m,row){
 }
 function isDimensionLimited(it,d){
   if (d.length==1&&it.row.length==d[0]&&(it.parent.row.length<d[0]||it.row[0]>it.parent.row[0])) return true
+  if (d.length==1&&d[0]==0&&it.row.length==1&&it.row[0]==1) return true // for 0-Y
   return false
 }
 function compareRow(r1,r2){
@@ -188,6 +189,7 @@ function expand(s,n,d,f){
     for (var j=b.cloumn+1;j<=t.cloumn;j++){
       var it=m[0][j],head={row:[0],cloumn:j+len*i+len,no:it.no,parent:it.parent}
       var max_row=calcMaxCopyrow(m,b,t,o,it,dim_seq,index,i)
+      if (d.length==1&&d[0]==0) max_row=it.row // for 0-Y
       if (head.parent.cloumn>=b.cloumn) head.parent=m[0][head.parent.cloumn+len*i+len]
       insertItem(m,head)
       //displayMt(m)
@@ -198,6 +200,7 @@ function expand(s,n,d,f){
           head.foot={value:ex.length?ex[j+len*i+len]:it.value,row:calcFootRow(head),cloumn:head.cloumn,no:it.no,parent:it.parent,head:head}
           head=head.foot
           max_row=calcMaxCopyrow(m,b,t,o,it,dim_seq,index,i)
+          if (d.length==1&&d[0]==0) max_row=it.row // for 0-Y
           insertItem(m,head)
           //displayMt(m)
           if (head.parent.cloumn<0){
