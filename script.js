@@ -12,25 +12,26 @@ function dg(s){
   return document.getElementById(s);
 }
 function displayMt(m){
-  var index=[]
-  for (var i=0;i<m.length;i++) index.push(0)
   mt+='<p></p><table border="0">'
-  while (true){
-    var row=[]
-    for (var i=0;i<m.length;i++) if (m[i].length>index[i]&&(row.length==0||compareRow(m[i][index[i]].row,row)<0)) row=m[i][index[i]].row
-    if (row.length==0) break
+  for (var i=0;i<m.length;i++){
     mt+='<tr>'
-    mt+='<td align="center" width="80" bgColor="#e9e0e0">'+row.slice(0,10)+'</td>'
-    for (var i=0;i<m.length;i++){
-      if (m[i].length>index[i]&&compareRow(m[i][index[i]].row,row)==0) mt+='<td align="center" width="80" bgColor="#e0eee0">'+m[i][index[i]++].value+'</td>'
-      else mt+='<td align="center" width="80" bgColor="#e0eee0">'+''+'</td>'
+    mt+='<td align="center" width="80" bgColor="#e9e0e0">'+m[i][0].row.slice(0,10)+'</td>'
+    for (var j=0;j<m[0].length;j++){
+      var v=m[i].length>j&&m[i][j].value?m[i][j].value:''
+      mt+='<td align="center" width="80" bgColor="#e0eee0">'+v+'</td>'
     }
     mt+='</tr>'
   }
   mt+='</table>'
+  dg("mt").innerHTML=mt
+}
+function getRowIndex(m,row){
+  for (var i=0;i<m.length;i++) if (compareRow(m[i][0].row,row)==0) return i
+  return -1
 }
 function isDimensionLimited(it,d){
-  if (d.length==1&&it.row.length==d[0]&&(it.parent.row.length<d[0]||it.row[0]>it.parent.row[0])) return true
+  if (d.length==1&&it.row.length==d[0]&&(it.parent.row.length<d[0]||it.row[0]>it.parent.row[0])) return true // for n-Y
+  if (d.length==1&&d[0]==0&&it.row.length==1&&it.row[0]==1) return true // for 0-Y
   return false
 }
 function compareRow(r1,r2){
@@ -59,17 +60,49 @@ function rowDifference(r1,r2){
   for (++i;i<r1.length;i++) row.push(r1[i])
   return row
 }
+function insertItem(m,it){
+  for (var i=m.length-1;i>=0;i--){
+    if (compareRow(it.row,m[i][0].row)<0) continue
+    if (compareRow(it.row,m[i][0].row)>0) m.splice(++i,0,[])
+    while (m[i].length<=it.cloumn) m[i].push({value:0,row:it.row,cloumn:m[i].length})
+    m[i][it.cloumn]=it
+    break
+  }
+}
 function calcFootRow(it){
-  var row=[1],diff=rowDifference(it.row,it.parent.row).length
-  if (compareRow(dg("inputd").value.split(itemSeparatorRegex).map(e=>{return Number(e)}),[0])>0) while (diff--) row.push(0)
+  var row=[1],d=rowDifference(it.row,it.parent.row).length
+  while (d--) row.push(0)
   return rowAddition(it.row,row)
 }
-function preprocess(m,b){
-  for (var i=0;i<m[b.cloumn].length;) m[b.cloumn][i].no=++i
-  for (var i=b.cloumn+1;i<m.length;i++){
+function calcFoot(it){
+  var foot={value:it.value-it.parent.value,row:calcFootRow(it),cloumn:it.cloumn,head:it}
+  it.foot=foot
+  var p=it.parent
+  if ('foot' in p&&compareRow(p.foot.row,foot.row)<=0) p=p.foot
+  while (foot.value<=p.value) p=p.parent
+  foot.parent=p
+  return foot
+}
+function preprocess(m,o){
+  var t=o[o.length-1]
+  if (t.value==1){
+    t=t.head
+    o[o.length-1]=t
+  }
+  if (t.value-t.parent.value==1){
+    m.length=getRowIndex(m,t.row)+1
+    for (var i=0;i<o.length;i++){
+      while(compareRow(o[i].row,t.row)>0) o[i]=o[i].head
+      delete o[i].foot
+    }
+  }
+  var b=t.parent,no=1
+  for (var i=0;i<m.length;i++){
     for (var j=0;j<m[i].length;j++){
-      if (m[i][j].parent.cloumn<b.cloumn) m[i][j].no=0
-      else if (compareRow(m[i][j].parent.row,m[i][j].row)==0) m[i][j].no=m[i][j].parent.no
+      if (m[i][j].value<=0) continue
+      if (m[i][j].cloumn<b.cloumn) m[i][j].no=0
+      else if (m[i][j].cloumn==b.cloumn) m[i][j].no=no++
+      else if (compareRow(m[i][j].row,m[i][j].parent.row)==0) m[i][j].no=m[i][j].parent.no
       else m[i][j].no=m[i][j].head.parent.no
     }
   }
@@ -80,21 +113,15 @@ function fetchDimensionSequence(m,it){
   return seq
 }
 function drawMountain(m,d){
-  var o=[]
+  var o=m[0].slice()
   for (var i=0;i<m.length;i++){
-    var it=m[i][0]
-    while (it.value>1){
-      if (isDimensionLimited(it,d)) break
-      it.foot={value:it.value-it.parent.value,row:calcFootRow(it),cloumn:it.cloumn,head:it}
-      m[i].push(it.foot)
-      var p=it.parent
-      if ('foot' in p&&compareRow(p.foot.row,it.foot.row)<=0) p=p.foot
-      while (p.value>=it.foot.value) p=p.parent
-      it.foot.parent=p
-      it=it.foot
+    for (var j=0;j<m[i].length;j++){
+      if (m[i][j].value<=1||isDimensionLimited(m[i][j],d)) continue
+      insertItem(m,calcFoot(m[i][j]))
+      o[j]=m[i][j].foot
     }
-    o.push(it)
   }
+  preprocess(m,o)
   return o
 }
 function expandDimensionSequence(s,n,d){
@@ -105,7 +132,7 @@ function expandDimensionSequence(s,n,d){
   }
   if (d.length==2&&d[0]==0){ // [0,a] mean ω^a-Y, [0,0] mean ω^ω-Y
     var p=--s[s.length-1],b=p-s[s.length-2]
-    if (d[1]) b=Math.min(b,d[1]-1)
+    if (d[1]) b=Math.min(b,d[1])
     while (n--){
       p+=b
       s.push(p)
@@ -119,75 +146,89 @@ function expandDimensionSequence(s,n,d){
   while (n--) s.push(p)
   return s
 }
-function calcMaxCopyrow(m,b,t,it,dim_seq,index,i){
-  if (compareRow(dg("inputd").value.split(itemSeparatorRegex).map(e=>{return Number(e)}),[0])==0||it.no==0) return it.row
-  var diff=rowDifference(it.row,m[b.cloumn][it.no-1].row).slice()
-  if (it.no==b.no&&diff.length>=t.row.length){
-    var l=dim_seq[index+i+1]-t.row.length
-    while (l-->0) diff.splice(1,0,0)
-  }
+function calcMaxCopyrow(m,b,t,o,it,dim_seq,index,i){
+  if (it.no==0) return it.row
+  var p=b,len=t.cloumn-b.cloumn
+  while (p.no>it.no) p=p.head
+  var diff=rowDifference(it.row,p.row).slice()
+  if (p.no==b.no&&diff.length==t.row.length) while (diff.length<dim_seq[index+i+1]) diff.splice(1,0,0)
   if (diff.length==0) diff.push(0)
-  var p=m[t.cloumn+(t.cloumn-b.cloumn)*i][m[t.cloumn+(t.cloumn-b.cloumn)*i].length-1]
+  p=o[t.cloumn+len*i]
   while (p.no>it.no) p=p.head
   return rowAddition(p.row,diff)
 }
-function copyItem(op,head,max_row){
-  if (head.parent.cloumn<0) return
+function copyItem(m,it,head,max_row){
   var row={}
   while (true){
     row=calcFootRow(head)
-    if (compareRow(row,max_row)>0) return
-    head.foot={value:head.value,row:row,cloumn:head.cloumn,no:head.no,head:head,parent:head.parent}
+    if (compareRow(row,max_row)>0) return head
+    head.foot={value:1,row:row,cloumn:head.cloumn,no:head.no,head:head,parent:head.parent}
     if ('foot' in head.parent&&compareRow(head.parent.foot.row,head.foot.row)<=0) head.foot.parent=head.foot.parent.foot
-    op.push(head.foot)
+    insertItem(m,head.foot)
+    //displayMt(m)
     head=head.foot
   }
 }
-function expand(s,n,d,f=false){
+function expand(s,n,d,f){
   if (s[s.length-1].value<=1) return s.slice(0,-1).map(e=>{return e.value})
-  var m=[],ex=[]
-  s.forEach(e=>{m.push([e])})
-  var o=drawMountain(m,d)
-  if (f) displayMt(m)
-  var t=m[m.length-1][m[m.length-1].length-2],b=t.parent,len=t.cloumn-b.cloumn
-  preprocess(m,b)
+  var m=[s],o=drawMountain(m,d),t=o[o.length-1],b=t.parent,len=t.cloumn-b.cloumn
   var dim_seq=fetchDimensionSequence(m,t),index=dim_seq.length-1
+  //console.log(dim_seq)
   dim_seq=expandDimensionSequence(dim_seq,n,d)
-  if (o[o.length-1].value>1){
+  //console.log(dim_seq)
+  if (f) displayMt(m)
+  var it=t,ex=[]
+  if (t.value-b.value>1){
     o.forEach(e=>{ex.push({value:e.value,row:[0],cloumn:e.cloumn,parent:e.parent.cloumn==-1?{row:[0],cloumn:-1,no:0}:ex[e.parent.cloumn]})})
     ex=expand(ex,n,d,f)
     len=(ex.length-o.length)/n
     b=o[t.cloumn-len]
   }
-  else {
-    delete t.foot
-    m[t.cloumn].pop()
-  }
-  for (var i=0;i<m[t.cloumn].length;i++) m[t.cloumn][i].value--
+  for (it.value--;'head' in it;it=it.head) it.head.value--
   for (var i=0;i<n;i++){
     for (var j=b.cloumn+1;j<=t.cloumn;j++){
-      var l=m.length,head={value:m[j][0].value,row:[0],cloumn:l,no:m[j][0].no,parent:m[j][0].parent},op=[head]
-      m.push(op)
-      if (head.parent.cloumn>=b.cloumn) head.parent=m[head.parent.cloumn+len*i+len][0]
-      for (var k=0;k<m[j].length;k++){
-        var max_row=calcMaxCopyrow(m,b,t,m[j][k],dim_seq,index,i)
-        copyItem(op,op[op.length-1],max_row)
-        if (k<m[j].length-1){
-          head={value:m[j][k+1].value,row:calcFootRow(op[op.length-1]),cloumn:l,no:m[j][k+1].no,parent:m[j][k+1].parent,head:op[op.length-1]}
-          op[op.length-1].foot=head
-          op.push(head)
-          if (head.parent.cloumn>=b.cloumn) head.parent=m[head.parent.cloumn+len*i+len][m[head.parent.cloumn+len*i+len].length-1]
-          while (compareRow(head.parent.row,head.row)>0) head.parent=head.parent.head
+      var it=m[0][j],head={row:[0],cloumn:j+len*i+len,no:it.no,parent:it.parent}
+      var max_row=calcMaxCopyrow(m,b,t,o,it,dim_seq,index,i)
+      if (d.length==1&&d[0]==0) max_row=it.row // for 0-Y
+      if (head.parent.cloumn>=b.cloumn) head.parent=m[0][head.parent.cloumn+len*i+len]
+      insertItem(m,head)
+      //displayMt(m)
+      while (true){
+        head=copyItem(m,it,head,max_row)
+        if ('foot' in it){
+          it=it.foot
+          head.foot={value:ex.length?ex[j+len*i+len]:it.value,row:calcFootRow(head),cloumn:head.cloumn,no:it.no,parent:it.parent,head:head}
+          head=head.foot
+          max_row=calcMaxCopyrow(m,b,t,o,it,dim_seq,index,i)
+          if (d.length==1&&d[0]==0) max_row=it.row // for 0-Y
+          insertItem(m,head)
+          //displayMt(m)
+          if (head.parent.cloumn<0){
+            o.push(head)
+            while ('head' in head){
+              head.head.value=head.value+head.head.parent.value
+              head=head.head
+            }
+            break
+          }
+          else if (head.parent.cloumn>=b.cloumn) head.parent=m[0][head.parent.cloumn+len*i+len]
+          while ('foot' in head.parent&&compareRow(head.parent.foot.row,head.row)<=0) head.parent=head.parent.foot
+        }
+        else {
+          o.push(head)
+          head.value=ex.length?ex[j+len*i+len]:it.value
+          while ('head' in head){
+            head.head.value=head.value+head.head.parent.value
+            //displayMt(m)
+            head=head.head
+          }
+          break
         }
       }
-      op[op.length-1].value=ex.length?ex[j+len*i+len]:m[j][m[j].length-1].value
-      for (var k=m[l].length-1;k>0;k--) m[l][k-1].value=m[l][k].value+m[l][k-1].parent.value
     }
   }
   if (f) displayMt(m)
-  var ret=[]
-  for (var i=0;i<m.length;i++) ret.push(m[i][0].value)
-  return ret
+  return m[0].map(e=>{return e.value})
 }
 function toSequence(s){
   var seq=[]
@@ -214,7 +255,6 @@ function expandall(){
   inputd=dg("inputd").value;
   mt="";
   dg("output").value=input.split(lineBreakRegex).map(e=>expandmultilimited(e,inputn,inputd)).join("\n");
-  dg("mt").innerHTML=mt
 }
 window.onpopstate=function (e){
   load();
