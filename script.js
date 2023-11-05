@@ -61,7 +61,7 @@ function rowDifference(r1,r2){
 }
 function calcFootRow(it){
   var row=[1],diff=rowDifference(it.row,it.parent.row).length
-  if (compareRow(dg("inputd").value.split(itemSeparatorRegex),[0])>0) while (diff--) row.push(0)
+  if (compareRow(dg("inputd").value.split(itemSeparatorRegex).map(e=>{return Number(e)}),[0])>0) while (diff--) row.push(0)
   return rowAddition(it.row,row)
 }
 function preprocess(m,b){
@@ -120,7 +120,7 @@ function expandDimensionSequence(s,n,d){
   return s
 }
 function calcMaxCopyrow(m,b,t,it,dim_seq,index,i){
-  if (compareRow(dg("inputd").value.split(itemSeparatorRegex),[0])==0||it.no==0) return it.row
+  if (compareRow(dg("inputd").value.split(itemSeparatorRegex).map(e=>{return Number(e)}),[0])==0||it.no==0) return it.row
   var diff=rowDifference(it.row,m[b.cloumn][it.no-1].row).slice()
   if (it.no==b.no&&diff.length>=t.row.length){
     var l=dim_seq[index+i+1]-t.row.length
