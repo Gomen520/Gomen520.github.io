@@ -14,7 +14,7 @@ function dg(s){
 function displayMt(m){
   var index=[]
   for (var i=0;i<m.length;i++) index.push(0)
-  mt+='<p></p><table border="0">'
+  mt+='<p></p><table>'
   while (true){
     var row=[]
     for (var i=0;i<m.length;i++) if (m[i].length>index[i]&&(row.length==0||compareRow(m[i][index[i]].row,row)<0)) row=m[i][index[i]].row
@@ -29,7 +29,7 @@ function displayMt(m){
   }
   mt+='</table>'
 }
-function isDimensionLimited(it,d){
+function isDimensionLimited(it,d){ // n-Y
   if (d.length==1&&it.row.length==d[0]&&(it.parent.row.length<d[0]||it.row[0]>it.parent.row[0])) return true
   return false
 }
@@ -46,7 +46,6 @@ function rowAddition(r1,r2){
   if (r1.length<r2.length) return r2
   if (r2.length==0) return r1
   var f=r1.slice(0,r1.length-r2.length),b=r2.slice()
-  if (b.length==0) b.push(0)
   b[0]+=r1[r1.length-r2.length]
   return f.concat(b)
 }
@@ -59,9 +58,9 @@ function rowDifference(r1,r2){
   for (++i;i<r1.length;i++) row.push(r1[i])
   return row
 }
-function calcFootRow(it){
+function calcFootRow(it,d){
   var row=[1],diff=rowDifference(it.row,it.parent.row).length
-  if (compareRow(dg("inputd").value.split(itemSeparatorRegex).map(e=>{return Number(e)}),[0])>0) while (diff--) row.push(0)
+  if (compareRow(d,[0])>0) while (diff--) row.push(0)
   return rowAddition(it.row,row)
 }
 function preprocess(m,b){
@@ -85,7 +84,7 @@ function drawMountain(m,d){
     var it=m[i][0]
     while (it.value>1){
       if (isDimensionLimited(it,d)) break
-      it.foot={value:it.value-it.parent.value,row:calcFootRow(it),cloumn:it.cloumn,head:it}
+      it.foot={value:it.value-it.parent.value,row:calcFootRow(it,d),cloumn:it.cloumn,head:it}
       m[i].push(it.foot)
       var p=it.parent
       if ('foot' in p&&compareRow(p.foot.row,it.foot.row)<=0) p=p.foot
@@ -114,13 +113,14 @@ function expandDimensionSequence(s,n,d){
   }
   if (compareRow(d,[1,0,1])==0) return expand(toSequence(s),n,d,false) // X-Y
   if (compareRow(d,[1,0,2])==0) return expand(toSequence(s),n,[1],false) // dimension sequence expands as 1-Y
+  if (d.length>2&&d[0]==0&&d[1]==0) return expand(toSequence(s),n,d.slice(2),false)
   // default expand as ω-Y
   var p=--s[s.length-1]
   while (n--) s.push(p)
   return s
 }
-function calcMaxCopyrow(m,b,t,it,dim_seq,index,i){
-  if (compareRow(dg("inputd").value.split(itemSeparatorRegex).map(e=>{return Number(e)}),[0])==0||it.no==0) return it.row
+function calcMaxCopyrow(m,b,t,it,dim_seq,index,i,d){
+  if (compareRow(d,[0])==0||it.no==0) return it.row
   var diff=rowDifference(it.row,m[b.cloumn][it.no-1].row).slice()
   if (it.no==b.no&&diff.length>=t.row.length){
     var l=dim_seq[index+i+1]-t.row.length
@@ -131,11 +131,10 @@ function calcMaxCopyrow(m,b,t,it,dim_seq,index,i){
   while (p.no>it.no) p=p.head
   return rowAddition(p.row,diff)
 }
-function copyItem(op,head,max_row){
+function copyItem(op,head,max_row,d){
   if (head.parent.cloumn<0) return
-  var row={}
   while (true){
-    row=calcFootRow(head)
+    var row=calcFootRow(head,d)
     if (compareRow(row,max_row)>0) return
     head.foot={value:head.value,row:row,cloumn:head.cloumn,no:head.no,head:head,parent:head.parent}
     if ('foot' in head.parent&&compareRow(head.parent.foot.row,head.foot.row)<=0) head.foot.parent=head.foot.parent.foot
@@ -170,10 +169,10 @@ function expand(s,n,d,f=false){
       m.push(op)
       if (head.parent.cloumn>=b.cloumn) head.parent=m[head.parent.cloumn+len*i+len][0]
       for (var k=0;k<m[j].length;k++){
-        var max_row=calcMaxCopyrow(m,b,t,m[j][k],dim_seq,index,i)
-        copyItem(op,op[op.length-1],max_row)
+        var max_row=calcMaxCopyrow(m,b,t,m[j][k],dim_seq,index,i,d)
+        copyItem(op,op[op.length-1],max_row,d)
         if (k<m[j].length-1){
-          head={value:m[j][k+1].value,row:calcFootRow(op[op.length-1]),cloumn:l,no:m[j][k+1].no,parent:m[j][k+1].parent,head:op[op.length-1]}
+          head={value:m[j][k+1].value,row:calcFootRow(op[op.length-1],d),cloumn:l,no:m[j][k+1].no,parent:m[j][k+1].parent,head:op[op.length-1]}
           op[op.length-1].foot=head
           op.push(head)
           if (head.parent.cloumn>=b.cloumn) head.parent=m[head.parent.cloumn+len*i+len][m[head.parent.cloumn+len*i+len].length-1]
