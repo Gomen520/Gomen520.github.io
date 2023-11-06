@@ -150,11 +150,13 @@ function expand(s,n,d,f=false){
   var t=m[m.length-1][m[m.length-1].length-2],b=t.parent,len=t.cloumn-b.cloumn
   var dim_seq=fetchDimensionSequence(m,t),index=dim_seq.length-1
   dim_seq=expandDimensionSequence(dim_seq,n,d)
-  if (o[o.length-1].value>1&&n>0){
+  if (o[o.length-1].value>1){
     o.forEach(e=>{ex.push({value:e.value,row:[0],cloumn:e.cloumn,parent:e.parent.cloumn==-1?{row:[0],cloumn:-1,no:0}:ex[e.parent.cloumn]})})
     ex=expand(ex,n,d,f)
-    len=(ex.length-o.length)/n
-    b=o[t.cloumn-len]
+    if (n){
+      len=(ex.length-o.length)/n
+      b=o[t.cloumn-len]
+    }
   }
   else {
     delete t.foot
