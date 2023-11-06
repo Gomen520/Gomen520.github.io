@@ -126,7 +126,6 @@ function calcMaxCopyrow(m,b,t,it,dim_seq,index,i,d){
     var l=dim_seq[index+i+1]-t.row.length
     while (l-->0) diff.splice(1,0,0)
   }
-  if (diff.length==0) diff.push(0)
   var p=m[t.cloumn+(t.cloumn-b.cloumn)*i][m[t.cloumn+(t.cloumn-b.cloumn)*i].length-1]
   while (p.no>it.no) p=p.head
   return rowAddition(p.row,diff)
@@ -151,7 +150,7 @@ function expand(s,n,d,f=false){
   var t=m[m.length-1][m[m.length-1].length-2],b=t.parent,len=t.cloumn-b.cloumn
   var dim_seq=fetchDimensionSequence(m,t),index=dim_seq.length-1
   dim_seq=expandDimensionSequence(dim_seq,n,d)
-  if (o[o.length-1].value>1){
+  if (o[o.length-1].value>1&&n>0){
     o.forEach(e=>{ex.push({value:e.value,row:[0],cloumn:e.cloumn,parent:e.parent.cloumn==-1?{row:[0],cloumn:-1,no:0}:ex[e.parent.cloumn]})})
     ex=expand(ex,n,d,f)
     len=(ex.length-o.length)/n
