@@ -111,9 +111,9 @@ function expandDimensionSequence(s,n,d){
     }
     return s
   }
-  if (compareRow(d,[1,0,1])==0) return expand(toSequence(s),n,d,false) // X-Y
-  if (compareRow(d,[1,0,2])==0) return expand(toSequence(s),n,[1],false) // dimension sequence expands as 1-Y
-  if (d.length>2&&d[0]==0&&d[1]==0) return expand(toSequence(s),n,d.slice(2),false)
+  if (compareRow(d,[1,0,1])==0) return expand(toSequence(s),n,d) // X-Y
+  if (compareRow(d,[1,0,2])==0) return expand(toSequence(s),n,[1]) // dimension sequence expands as 1-Y
+  if (d.length>2&&d[0]==0&&d[1]==0) return expand(toSequence(s),n,d.slice(2))
   // default expand as ω-Y
   var p=--s[s.length-1]
   while (n--) s.push(p)
@@ -147,7 +147,7 @@ function expand(s,n,d,f=false){
   s.forEach(e=>{m.push([e])})
   var o=drawMountain(m,d)
   if (f) displayMt(m)
-  var t=m[m.length-1][m[m.length-1].length-2],b=t.parent,len=t.cloumn-b.cloumn
+  var t=o[o.length-1].head,b=t.parent,len=t.cloumn-b.cloumn
   var dim_seq=fetchDimensionSequence(m,t),index=dim_seq.length-1
   dim_seq=expandDimensionSequence(dim_seq,n,d)
   if (o[o.length-1].value>1){
@@ -166,19 +166,18 @@ function expand(s,n,d,f=false){
   for (var i=0;i<m[t.cloumn].length;i++) m[t.cloumn][i].value--
   for (var i=0;i<n;i++){
     for (var j=b.cloumn+1;j<=t.cloumn;j++){
-      var l=m.length,head={value:m[j][0].value,row:[0],cloumn:l,no:m[j][0].no,parent:m[j][0].parent},op=[head]
+      var l=m.length,op=[]
       m.push(op)
-      if (head.parent.cloumn>=b.cloumn) head.parent=m[head.parent.cloumn+len*i+len][0]
       for (var k=0;k<m[j].length;k++){
-        var max_row=calcMaxCopyrow(m,b,t,m[j][k],dim_seq,index,i,d)
-        copyItem(op,op[op.length-1],max_row,d)
-        if (k<m[j].length-1){
-          head={value:m[j][k+1].value,row:calcFootRow(op[op.length-1],d),cloumn:l,no:m[j][k+1].no,parent:m[j][k+1].parent,head:op[op.length-1]}
+        var max_row=calcMaxCopyrow(m,b,t,m[j][k],dim_seq,index,i,d),head={row:[0],cloumn:l,no:m[j][0].no,parent:m[j][0].parent}
+        if (op.length){
+          head={row:calcFootRow(op[op.length-1],d),cloumn:l,no:m[j][k].no,parent:m[j][k].parent,head:op[op.length-1]}
           op[op.length-1].foot=head
-          op.push(head)
-          if (head.parent.cloumn>=b.cloumn) head.parent=m[head.parent.cloumn+len*i+len][m[head.parent.cloumn+len*i+len].length-1]
-          while (compareRow(head.parent.row,head.row)>0) head.parent=head.parent.head
         }
+        op.push(head)
+        if (head.parent.cloumn>=b.cloumn) head.parent=m[head.parent.cloumn+len*i+len][m[head.parent.cloumn+len*i+len].length-1]
+        while (compareRow(head.parent.row,head.row)>0) head.parent=head.parent.head
+        copyItem(op,op[op.length-1],max_row,d)
       }
       op[op.length-1].value=ex.length?ex[j+len*i+len]:m[j][m[j].length-1].value
       for (var k=m[l].length-1;k>0;k--) m[l][k-1].value=m[l][k].value+m[l][k-1].parent.value
