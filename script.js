@@ -68,8 +68,7 @@ function preprocess(m,b){
   for (var i=b.cloumn+1;i<m.length;i++){
     for (var j=0;j<m[i].length;j++){
       if (m[i][j].parent.cloumn<b.cloumn) m[i][j].no=0
-      else if (compareRow(m[i][j].parent.row,m[i][j].row)==0) m[i][j].no=m[i][j].parent.no
-      else m[i][j].no=m[i][j].head.parent.no
+      else m[i][j].no=m[i][j].parent.no
     }
   }
 }
