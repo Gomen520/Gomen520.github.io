@@ -63,12 +63,36 @@ function calcFootRow(it,d){
   if (compareRow(d,[0])>0) while (diff--) row.push(0)
   return rowAddition(it.row,row)
 }
-function preprocess(m,b){
+function preprocess(m,b,t,n,d){
+  for (var i=0;i<b.cloumn;i++) for (var j=0;j<m[i].length;j++) m[i][j].no=0
   for (var i=0;i<m[b.cloumn].length;) m[b.cloumn][i].no=++i
   for (var i=b.cloumn+1;i<m.length;i++){
     for (var j=0;j<m[i].length;j++){
-      if (m[i][j].parent.cloumn<b.cloumn) m[i][j].no=0
-      else m[i][j].no=m[i][j].parent.no
+      if (compareRow(m[i][j].row,m[i][j].parent.row)==0) m[i][j].no=m[i][j].parent.no
+      else m[i][j].no=m[i][j].head.parent.no
+      if (m[i][j].no==b.no&&t.row.length>=b.row.length&&m[i][j].row.length>b.row.length){
+        var it=m[i][j],dim_seq=[it.row.length,t.row.length+1]
+        while (true){
+          if (it.cloumn<=b.cloumn||compareRow(it.row,it.parent.row)>0) it=it.head.parent
+          else it=it.parent
+          if (it.row.length<dim_seq[0]) dim_seq.unshift(it.row.length)
+          if (compareRow(it.row,[0])==0) break
+        }
+        dim_seq=toSequence(dim_seq)
+        var k=0
+        for (;k<dim_seq.length;k++){
+          if (dim_seq[k].value==b.row.length){
+            dim_seq[dim_seq.length-1].parent=dim_seq[k]
+            break
+          }
+        }
+        var len=dim_seq.length-1-k,ii=dim_seq.length-2+len
+        dim_seq=expand(dim_seq,n,d)
+        m[i][j].dim_seq=[]
+        for (;ii<dim_seq.length;ii+=len){
+          m[i][j].dim_seq.push(dim_seq[ii])
+        }
+      }
     }
   }
 }
@@ -130,7 +154,8 @@ function calcMaxCopyrow(m,b,t,it,dim_seq,index,i,d){
   return rowAddition(p.row,diff)
 }
 function copyItem(op,head,max_row,d){
-  if (head.parent.cloumn<0) return
+  //if (head.parent.cloumn<0) return
+  if (head.parent.cloumn<0&&'head' in head&&compareRow(head.head.parent.row,max_row)<0) head.parent=head.head.parent
   while (true){
     var row=calcFootRow(head,d)
     if (compareRow(row,max_row)>0) return
@@ -161,14 +186,28 @@ function expand(s,n,d,f=false){
     delete t.foot
     m[t.cloumn].pop()
   }
-  preprocess(m,b)
+  preprocess(m,b,t,n,d)
   for (var i=0;i<m[t.cloumn].length;i++) m[t.cloumn][i].value--
+  t.parent=b.parent
+  var pb=b,mt=m[m.length-1]
+  while ('foot' in pb){
+    pb=pb.foot
+    var tm={value:pb.value,row:pb.row,cloumn:t.cloumn,no:pb.no,parent:pb.parent,head:mt[mt.length-1]}
+    mt[mt.length-1].foot=tm
+    mt.push(tm)
+  }
   for (var i=0;i<n;i++){
     for (var j=b.cloumn+1;j<=t.cloumn;j++){
       var l=m.length,op=[]
       m.push(op)
       for (var k=0;k<m[j].length;k++){
         var max_row=calcMaxCopyrow(m,b,t,m[j][k],dim_seq,index,i,d),head={row:[0],cloumn:l,no:m[j][0].no,parent:m[j][0].parent}
+        if ('dim_seq' in m[j][k]){
+          var beg=[1],kk=m[j][k].dim_seq[i],row_dif=m[j][k].row[0]-1==0?[]:[m[j][k].row[0]-1]
+          for (var jj=1;jj<m[j][k].row.length-1;jj++) row_dif.push(m[j][k].row[jj])
+          while (--kk>0) beg.push(0)
+          max_row=rowAddition(beg,row_dif)
+        }
         if (op.length){
           head={row:calcFootRow(op[op.length-1],d),cloumn:l,no:m[j][k].no,parent:m[j][k].parent,head:op[op.length-1]}
           op[op.length-1].foot=head
