@@ -11,16 +11,7 @@ window.onload=function (){
 function dg(s){
   return document.getElementById(s);
 }
-function handleClick(c,r,t){
-  for (var i=0;i<t.parentElement.parentElement.rows.length;i++){
-    for (var j=1;j<t.parentElement.parentElement.rows[i].cells.length;j++){
-      t.parentElement.parentElement.rows[i].cells[j].style.backgroundColor='#e0eee0'
-    }
-  }
-  if (c>=0) dg(c+','+r).style.backgroundColor='#e0e0ee'
-  t.style.backgroundColor='#e0e0ee'
-}
-function displayMt(m,f=true){
+function displayMt(m){
   var index=[]
   for (var i=0;i<m.length;i++) index.push(0)
   mt+='<p></p><table>'
@@ -31,22 +22,7 @@ function displayMt(m,f=true){
     mt+='<tr>'
     mt+='<td align="center" width="80" bgColor="#eee0e0">'+row.slice(0,10)+'</td>'
     for (var i=0;i<m.length;i++){
-      if (m[i].length>index[i]&&compareRow(m[i][index[i]].row,row)==0){
-        if (m[i][index[i]].value>1){
-          var p=m[i][index[i]].parent
-          for (var j=0;j<m[p.cloumn].length;j++){
-            if (compareRow(p.row,m[p.cloumn][j].row)==0) break
-          }
-          mt+='<td '
-          if (f) mt+='id="'+i+','+index[i]+'" onclick="handleClick('+p.cloumn+','+j+',this)" '
-          mt+='align="center" width="80" bgColor="#e0eee0">'+m[i][index[i]++].value+'</td>'
-        }
-        else {
-          mt+='<td '
-          if (f) mt+='<td id="'+i+','+index[i]+'" onclick="handleClick(-1,0,this)" '
-          mt+='align="center" width="80" bgColor="#e0eee0">'+m[i][index[i]++].value+'</td>'
-        }
-      }
+      if (m[i].length>index[i]&&compareRow(m[i][index[i]].row,row)==0) mt+='<td align="center" width="80" bgColor="#e0eee0">'+m[i][index[i]++].value+'</td>'
       else mt+='<td align="center" width="80" bgColor="#e0eee0">'+''+'</td>'
     }
     mt+='</tr>'
@@ -87,7 +63,12 @@ function calcFootRow(it,d){
   if (compareRow(d,[0])>0) while (diff--) row.push(0)
   return rowAddition(it.row,row)
 }
-function drawMountain(m,d){
+function getParentCloumn(s,e){
+  for (var i=0;i<s.length;i++) if (s[i].cloumn==e.parent.cloumn) return i
+}
+function drawMountain(s,d){
+  var m=[]
+  s.forEach(e=>{m.push([{value:e.value,row:[0],cloumn:e.cloumn,parent:e.value<=1?{row:[0],cloumn:-1}:m[getParentCloumn(s,e)][0]}])})
   for (var i=0;i<m.length;i++){
     var it=m[i][0]
     while (it.value>1){
@@ -101,9 +82,20 @@ function drawMountain(m,d){
       it=it.foot
     }
   }
+  return m
+}
+function setElementRefrence(m){
+  for (var i=0;i<m.length;i++){
+    for (var j=0;j<m[i].length;j++){
+      if (compareRow(m[i][j].row,[0])==0&&m[i][j].value==1) continue
+      if (compareRow(m[i][j].row,m[i][j].parent.row)==0) m[i][j].ref=m[i][j].parent
+      else m[i][j].ref=m[i][j].head.parent
+      if (m[i][j].ref.value==1) continue
+      m[i][j].ref=m[i][j].ref.ref
+    }
+  }
 }
 function copyElement(op,head,max_row,d){
-  if (head.parent.cloumn<0&&'head' in head&&compareRow(head.head.parent.row,max_row)<0) head.parent=head.head.parent
   while (true){
     var row=calcFootRow(head,d)
     if (compareRow(row,max_row)>0) return
@@ -128,21 +120,19 @@ function setElementNo(m,b){
     }
   }
 }
-function getReferenceChain(b){
-  var c=[],it=b
+function getReferenceChain(it){
+  var c=[]
   while (true){
     c.unshift(it)
-    if (it.value<=1&&compareRow(it.row,[0])==0) break
-    if (it.value>1&&compareRow(it.row,it.parent.row)==0) it=it.parent
-    else if ('foot' in it.head.parent&&compareRow(it.row,it.head.parent.foot.row)>=0) it=it.head.parent.foot
-    else it=it.head.parent
+    if (it.value<=1&&it.row[0]==0) break
+    it=it.ref
   }
   return c
 }
-function getMainDimensionSequence(c,t){
+function getMainDimensionSequence(t){
   var s=[]
-  c.forEach(e=>{s.push({value:e.row.length,row:[0],cloumn:e.cloumn})})
-  s.push({value:t.row.length+1,row:[0],cloumn:t.cloumn})
+  t.forEach(e=>{s.push({value:e.row.length,row:[0],cloumn:e.cloumn})})
+  s[s.length-1].value+=1
   for (var i=0;i<s.length;i++){
     if (s[i].value<=1) {s[i].parent={row:[0],cloumn:-1};continue}
     for (var j=i-1;j>=0;j--) if (s[j].value<s[i].value) {s[i].parent=s[j];break}
@@ -150,9 +140,8 @@ function getMainDimensionSequence(c,t){
   return s
 }
 function getBootCloumn(s,d){
-  var m=[]
-  s.forEach(e=>{m.push([e])})
-  drawMountain(m,d)
+  var m=drawMountain(s,d)
+  setElementRefrence(m)
   var t=m[m.length-1][m[m.length-1].length-2],b=t.parent
   if (d.length==1&&t.foot.value>1){
     var o=[]
@@ -160,25 +149,25 @@ function getBootCloumn(s,d){
     return getBootCloumn(o,d)
   }
   if (t.row.length==b.row.length||d.length<3) return b.cloumn
-  return getBootCloumn(getMainDimensionSequence(getReferenceChain(b),t),d)
+  return getBootCloumn(getMainDimensionSequence(getReferenceChain(t)),d)
 }
 function expandElementDimensionSequence(m,b,t,n,d){
   if (b.row.length==t.row.length||d.length<3) return
   for (var i=b.cloumn+1;i<m.length;i++){
     for (var j=0;j<m[i].length;j++){
-      if (m[i][j].no<b.no||m[i][j].row.length<=b.row.length) continue
-      var c=getReferenceChain(m[i][j]).map(e=>{return {value:e.row.length}}),index=c.length,ex=[],len
-      m[i][j].dim_seq=[]
-      c=c.concat(t.parent.chain.slice(b.chain.length).map(e=>{return {value:e.row.length}}))
+      if (m[i][j].no!=b.no||rowDifference(m[i][j].row,b.row).length<b.row.length||m[i][j].row.length==1) continue
+      var c=getReferenceChain(m[i][j]).concat(getReferenceChain(t).slice(b.chain.length)).map(e=>{return {value:e.row.length}})
+      if (m[i][j].row.length==b.row.length) c=getReferenceChain(t).map(e=>{return {value:e.row.length}})
+      c[c.length-1].value+=1
       for (var k=0;k<c.length;k++){
         c[k].row=[0]
         c[k].cloumn=k
         if (c[k].value<=1) c[k].parent={row:[0],cloumn:-1}
-        if (k==index) {c[k].parent=c[b.chain.length-1];continue}
+        if (k==getReferenceChain(m[i][j]).length) {c[k].parent=c[b.chain.length-1];continue}
         for (var kk=k;kk>=0;kk--) if (c[kk].value<c[k].value){c[k].parent=c[kk];break}
       }
-      c.push({value:t.row.length+1,row:[0],cloumn:c.length,parent:c[t.parent.chain.length-1]})
-      len=c.length-b.chain.length
+      var len=c.length-b.chain.length,ex=[]
+      m[i][j].dim_seq=[]
       for (var k=0;k<mm[0].length;k++) if (isEqualSequnce(c,mm[0][k])&&mm[1][k]>=n&&compareRow(mm[2][k],d)==0){ex=mm[3][k];break}
       if (ex.length==0){
         ex=expand(c,n,d)
@@ -187,16 +176,17 @@ function expandElementDimensionSequence(m,b,t,n,d){
         mm[2].push(d)
         mm[3].push(ex)
       }
-      for (var k=1;k<=n;k++) m[i][j].dim_seq.push(ex[index-1+len*k])
+      var idx=getReferenceChain(m[i][j]).length
+      if (m[i][j].row.length==b.row.length) idx=getReferenceChain(b).length
+      for (var k=1;k<=n;k++) m[i][j].dim_seq.push(ex[idx-1+len*k])
     }
   }
 }
 function expand(s,n,d,f=false){
   if (s[s.length-1].value<=1) return s.slice(0,-1).map(e=>{return e.value})
   var c=getBootCloumn(s,d)
-  var m=[],ex=[]
-  s.forEach(e=>{m.push([{value:e.value,row:[0],cloumn:e.cloumn,parent:e.parent.cloumn<0?{row:[0],cloumn:-1}:m[e.parent.cloumn][0]}])})
-  drawMountain(m,d)
+  var m=drawMountain(s,d),ex=[]
+  setElementRefrence(m)
   if (f) displayMt(m)
   var t=m[m.length-1][m[m.length-1].length-2],b=t.parent
   if (c<b.cloumn&&c>=0) b=m[c][m[c].length-1]
@@ -220,7 +210,7 @@ function expand(s,n,d,f=false){
     t.parent=t.parent.parent
   }
   for (var i=b.no;i<m[b.cloumn].length;i++){
-    m[t.cloumn].push({value:m[b.cloumn][i].value,row:m[b.cloumn][i].row,cloumn:t.cloumn,no:m[b.cloumn][i].no,parent:m[b.cloumn][i].parent,head:m[t.cloumn][m[t.cloumn].length-1]})
+    m[t.cloumn].push({value:m[b.cloumn][i].value,row:m[b.cloumn][i].row,cloumn:t.cloumn,no:m[b.cloumn][i].no,parent:m[b.cloumn][i].parent,head:m[t.cloumn][m[t.cloumn].length-1],ref:m[b.cloumn][i].ref})
     m[t.cloumn][m[t.cloumn].length-2].foot=m[t.cloumn][m[t.cloumn].length-1]
   }
   for (var i=0;i<n;i++){
@@ -230,10 +220,9 @@ function expand(s,n,d,f=false){
       for (var k=0;k<m[j].length;k++){
         var head={row:[0],cloumn:l,no:m[j][0].no,parent:m[j][0].parent}
         if ('dim_seq' in m[j][k]){
-          var beg=[1],kk=m[j][k].dim_seq[i],row_dif=m[j][k].row[0]-1==0?[]:[m[j][k].row[0]-1]
-          for (var jj=1;jj<m[j][k].row.length-1;jj++) row_dif.push(m[j][k].row[jj])
-          while (--kk>0) beg.push(0)
-          max_row=rowAddition(beg,row_dif)
+          max_row=m[j][k].row.slice()
+          max_row[0]+=t.row[0]-1
+          while (max_row.length<m[j][k].dim_seq[i]) max_row.splice(1,0,0)
         }
         else if (m[j][k].no>0){
           for (var kk=m[b.cloumn+len*(i+1)].length-1;kk>=0;kk--){
@@ -248,6 +237,7 @@ function expand(s,n,d,f=false){
           head={row:calcFootRow(op[op.length-1],d),cloumn:l,no:m[j][k].no,parent:m[j][k].parent,head:op[op.length-1]}
           op[op.length-1].foot=head
         }
+        if (m[j][k].value==1&&m[j][k].row[0]>0) head.parent=m[j][k].ref
         op.push(head)
         if (head.parent.cloumn>=b.cloumn) head.parent=m[head.parent.cloumn+len*i+len][m[head.parent.cloumn+len*i+len].length-1]
         while (compareRow(head.parent.row,head.row)>0) head.parent=head.parent.head
