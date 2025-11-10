@@ -19,8 +19,16 @@ function displayMt(m){
     var row=[]
     for (var i=0;i<m.length;i++) if (m[i].length>index[i]&&(row.length==0||compareRow(m[i][index[i]].row,row)<0)) row=m[i][index[i]].row
     if (row.length==0) break
+    var row2=[],row3=row.slice()
+    row2.push(1)
+    while (true){
+      while (row3[0]==0) row3.shift()
+      if (row3.length==0) break
+      row2.push(row3.length)
+      row3[0]--
+    }
     mt+='<tr>'
-    mt+='<td align="center" width="80" bgColor="#eee0e0">'+row.slice(0,10)+'</td>'
+    mt+='<td align="center" width="80" bgColor="#eee0e0">'+row2+'</td>'
     for (var i=0;i<m.length;i++){
       if (m[i].length>index[i]&&compareRow(m[i][index[i]].row,row)==0) mt+='<td align="center" width="80" bgColor="#e0eee0">'+m[i][index[i]++].value+'</td>'
       else mt+='<td align="center" width="80" bgColor="#e0eee0">'+''+'</td>'
