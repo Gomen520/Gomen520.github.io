@@ -30,9 +30,7 @@ function displayMt(m){
   mt+='</table>'
 }
 function isDimensionLimited(it,d){
-  var row=getFootRow(it,d)
-  if (proc(d).length==1&&proc(d)[0]&&row[1]>proc(d)[0]) return true
-  if (d.length==2&&d[0]==0&&d[1]>0&&row.length>d[1]) return true 
+  if (proc(d).length==1&&proc(d)[0]&&getFootRow(it,d)[1]>proc(d)[0]||d.length==2&&d[0]==0&&d[1]>0&&getFootRow(it,d).length>d[1]) return true
   return false
 }
 function proc(d){
@@ -96,18 +94,25 @@ function getFootRow(it,d){
 function setElementRefrence(m){
   for (var i=0;i<m.length;i++){
     for (var j=0;j<m[i].length;j++){
-      if (compareRow(m[i][j].row,[1])==0&&m[i][j].value<=1) continue
+      if (m[i][j].row.length<=1&&m[i][j].value<=1) continue
       if (compareRow(m[i][j].row,m[i][j].parent.row)==0) m[i][j].ref=m[i][j].parent
+      else if ('foot' in m[i][j].head.parent&&compareRow(m[i][j].head.parent.foot.row,m[i][j].row)<=0){
+        m[i][j].ref=m[i][j].head.parent.foot
+        while (compareRow(m[i][j].ref.row,m[i][j].row)==0) m[i][j].ref=m[i][j].ref.ref
+      }
       else m[i][j].ref=m[i][j].head.parent
     }
   }
 }
 function setElementNo(m,b){
+  var id=0
   for (var i=0;i<m.length;i++){
     for (var j=0;j<m[i].length;j++){
       if (i==b.cloumn) m[i][j].no=j+1
       else if (i<b.cloumn||(m[i][j].value<=1&&j==0)) m[i][j].no=0
       else m[i][j].no=m[i][j].ref.no
+      if (i>b.cloumn) m[i][j].id=id++
+      if (i==b.cloumn||i==m.length-1) m[i][j].id=m[i][j].no
     }
   }
 }
@@ -143,7 +148,7 @@ function getOds(m){
   m.forEach(e=>{o.push({value:e[e.length-1].value,cloumn:e[0].cloumn,parent:e[e.length-1].value<=1?{row:[1],cloumn:-1}:o[e[e.length-1].parent.cloumn]})})
   return o
 }
-function getDs(m){
+function getMds(m){
   var seq=getReferenceChain(m[m.length-1][m[m.length-1].length-1]).map(e=>{return e.row.length<=1?1:e.row[1]})
   return toSequence(seq)
 }
@@ -159,35 +164,34 @@ function getBootIndex(s,d){
     return [c,m[c].length-1]
   }
   if (compareDimension(b.row,t.row)<0){
-    setElementRefrence(m)
-    var ch=getReferenceChain(t),dd=d
-    if (d[0]==0&&d[1]==0) dd=d.slice(2)
-    var c=ch[getBootIndex(getDs(m),dd)[0]].cloumn
+    var ch=getReferenceChain(t),dd=[0,1]
+    if (d.length>2&&d[0]==0&&d[1]==0) dd=d.slice(2)
+    if (d.length==3&&d[0]==1&&d[1]==0&&d[2]==1) dd=d
+    var c=ch[getBootIndex(getMds(m),dd)[0]].cloumn
     return [c,m[c][m[c].length-1].idx]
   }
   return [b.cloumn,b.idx]
 }
 function copyElement(m,b,t,it,op,i,d){
-  if (it.value<=1&&it.row.length>1) it.parent=it.head.parent
-  var min_row=[1],max_row=it.row
-  if (it.row.length>1) min_row=getFootRow(op[op.length-1],d)
+  if (it.value<=1&&it.row.length>1){
+    var p=it.head.parent
+    if ('foot' in p&&compareRow(p.foot.row,it.row)<=0) p=p.foot
+    while (p.value>1) p=p.parent
+    it.parent=p
+  }
+  var min_row=it.row.length>1?getFootRow(op[op.length-1],d):[1],max_row=it.row
   if (it.no>0){
-    var c=m.length-1-it.cloumn+b.cloumn
-    var p=m[c][0]
-    while (true){
-      if ('foot' in p&&p.foot.no<=it.no) p=p.foot
-      else break
-    }
-    max_row=rowAddition(p.row,rowDifference(it.row,m[b.cloumn][it.no-1].row))
-    if ('offset' in it) max_row=rowAddition(p.row,it.offset[i])
-    else if ('foot' in it.ref&&compareRow(it.ref.foot.row,it.row)<=0&&'offset' in it.ref.foot) max_row=rowAddition(p.row,it.ref.foot.offset[i])
-    else if ('offset' in it.ref) max_row=rowAddition(rowAddition(p.row,it.ref.offset[i]),rowDifference(it.row,it.ref.row))
+    var c=it.ref.cloumn+(t.cloumn-b.cloumn)*(i+1)
+    var r=m[c][0]
+    while ('foot' in r&&r.foot.id<=it.ref.id) r=r.foot
+    if ('offset' in it) max_row=rowAddition(r.row,it.offset[i])
+    else max_row=rowAddition(r.row,rowDifference(it.row,it.ref.row))
   }
   if (d.length==0||d.length==1&&d[0]==0||d.length==2&&d[0]==0||d.length==3&&d[0]==0&&d[1]==1&&d[2]==0) max_row=it.row
   if (compareRow(min_row,max_row)>0) alert('collapsed!')
   var row=min_row
   while (compareRow(row,max_row)<=0){
-    op.push({value:it.value,row:row,cloumn:m.length-1,idx:op.length,no:it.no})
+    op.push({value:it.value,row:row,cloumn:m.length-1,idx:op.length,no:it.no,id:it.id})
     if (op.length>1){
       op[op.length-1].head=op[op.length-2]
       op[op.length-2].foot=op[op.length-1]
@@ -216,15 +220,20 @@ function copyCloumn(m,b,t,c,i,ex,d){
 }
 function expandDimensionSequnece(m,b,t,n,d){
   if (compareDimension(b.row,t.row)>=0) return
-  var s=getDs(m),c=getBootIndex(s,d)[0]
+  var dd=[0,1]
+  if (d.length>2&&d[0]==0&&d[1]==0) dd=d.slice(2)
+  if (d.length==3&&d[0]==1&&d[1]==0&&d[2]==1) dd=d
+  var s=getMds(m),c=getBootIndex(s,dd)[0]
   for (var i=b.cloumn+1;i<=t.cloumn;i++){
     for (var j=0;j<m[i].length;j++){
+      if (i==t.cloumn&&j==m[t.cloumn].length-1) return
       var it=m[i][j],ds=s.slice(),pos=1
-      if (it.no!=b.no||compareDimension(rowDifference(it.row,it.ref.row),b.row)<=0||'foot' in it.ref&&compareRow(it.ref.foot.row,m[i][j].row)==0) continue
-      ds.splice(c+1,0,{value:rowDifference(it.row,it.ref.row)[1],parent:ds[c]})
+      if (it.no!=b.no||compareDimension(rowDifference(it.row,it.ref.row),b.row)<=0) continue
+      ds.splice(c+1,0,{value:rowDifference(it.row,it.ref.row).length<2?1:rowDifference(it.row,it.ref.row)[1],parent:ds[c]})
       while (it.ref.cloumn>b.cloumn){
         it=it.ref
-        ds.splice(c+1,0,{value:rowDifference(it.row,it.ref.row)[1],parent:ds[c]})
+        if (compareDimension(rowDifference(it.row,it.ref.row),b.row)<=0) break
+        ds.splice(c+1,0,{value:rowDifference(it.row,it.ref.row).length<2?1:rowDifference(it.row,it.ref.row)[1],parent:ds[c]})
         ds[c+2].parent=ds[c+1]
         pos++
       }
@@ -232,18 +241,12 @@ function expandDimensionSequnece(m,b,t,n,d){
         ds[k].cloumn=k
         while (ds[k].value<=ds[k].parent.value) ds[k].parent=ds[k].parent.parent
       }
-      var dd=[0,1],len=ds.length-1-c
-      if (d.length>2&&d[0]==0&&d[1]==0) dd=d.slice(2)
-      if (d.length==3&&d[0]==1&&d[1]==0&&d[2]==1) dd=d
+      var len=ds.length-1-c
       var ex=expand(ds,n,dd,inputm)
       it=m[i][j]
       it.offset=[]
       for (var ii=0;ii<n;ii++){
-        var offset=[]
-        for (var jj=1;jj<=pos;jj++){
-          offset=rowAddition(offset,[1,ex[c+len*(ii+1)+jj]])
-        }
-        it.offset.push(offset)
+        it.offset.push([1,ex[c+len*(ii+1)+pos]])
       }
     }
   }
@@ -268,7 +271,7 @@ function expand(s,n,d,f=true){
   for (var i=0;i<m[m.length-1].length;i++) m[m.length-1][i].value--
   for (var i=b.no;i<m[b.cloumn].length;i++){
     var idx=t.idx
-    m[t.cloumn].push({value:m[b.cloumn][i].value,row:m[b.cloumn][i].row,cloumn:t.cloumn,idx:idx++,no:m[b.cloumn][i].no,parent:m[b.cloumn][i].parent,head:m[t.cloumn][m[t.cloumn].length-1],ref:m[b.cloumn][i].ref})
+    m[t.cloumn].push({value:m[b.cloumn][i].value,row:m[b.cloumn][i].row,cloumn:t.cloumn,idx:idx++,no:m[b.cloumn][i].no,id:m[b.cloumn][i].no,parent:m[b.cloumn][i].parent,head:m[t.cloumn][m[t.cloumn].length-1],ref:m[b.cloumn][i]})
     m[t.cloumn][m[t.cloumn].length-2].foot=m[t.cloumn][m[t.cloumn].length-1]
   }
   for (var i=0;i<n;i++){
@@ -298,7 +301,6 @@ var inputn="3";
 var inputd="0";
 var inputm="true";
 var mt="";
-var mm=[[],[],[],[]];
 function expandall(){
   if (input==dg("input").value&&inputn==dg("inputn").value&&inputd==dg("inputd").value&&inputm==dg("inputm").checked) return;
   input=dg("input").value;
