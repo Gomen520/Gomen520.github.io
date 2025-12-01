@@ -241,10 +241,18 @@ function expandDimensionSequnece(m,b,t,n,d){
         ds[k].cloumn=k
         while (ds[k].value<=ds[k].parent.value) ds[k].parent=ds[k].parent.parent
       }
-      var len=ds.length-1-c
-      var ex=expand(ds,n,dd,inputm)
       it=m[i][j]
       it.offset=[]
+      if (d.length==2&&d[0]==2){
+        var lift=ds[ds.length-1].value-1-ds[ds.length-1].parent.value
+        if (d[1]>0&&lift>d[1]) lift=d[1]
+        for (var ii=0;ii<n;ii++){
+          it.offset.push([1,rowDifference(it.row,it.ref.row)[1]+(1+ii)*lift])
+        }
+        continue
+      }
+      var len=ds.length-1-c
+      var ex=expand(ds,n,dd,inputm)
       for (var ii=0;ii<n;ii++){
         it.offset.push([1,ex[c+len*(ii+1)+pos]])
       }
