@@ -232,7 +232,7 @@ function expandDimensionSequnece(m,b,t,n,d){
       ds.splice(c+1,0,{value:rowDifference(it.row,it.ref.row).length<2?1:rowDifference(it.row,it.ref.row)[1],parent:ds[c]})
       while (it.ref.cloumn>b.cloumn){
         it=it.ref
-        if (compareDimension(rowDifference(it.row,it.ref.row),b.row)<=0) break
+        if (compareDimension(rowDifference(it.row,it.ref.row),b.row)<=0) continue
         ds.splice(c+1,0,{value:rowDifference(it.row,it.ref.row).length<2?1:rowDifference(it.row,it.ref.row)[1],parent:ds[c]})
         ds[c+2].parent=ds[c+1]
         pos++
