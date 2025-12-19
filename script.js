@@ -149,8 +149,7 @@ function getOds(m){
   return o
 }
 function getMds(m){
-  var seq=getReferenceChain(m[m.length-1][m[m.length-1].length-1]).map(e=>{return e.row.length<=1?1:e.row[1]})
-  return toSequence(seq)
+  return toSequence(getReferenceChain(m[m.length-1][m[m.length-1].length-1]).map(e=>{return e.row.length<=1?1:e.row[1]}))
 }
 function getBootIndex(s,d){
   var m=drawMountain(s,d)
@@ -309,6 +308,51 @@ var inputn="3";
 var inputd="0";
 var inputm="true";
 var mt="";
+var tips="Fill different sequence or number in the third input box will choose different type of Y to expand:\n";
+tips+="1. '1,0,1' is X-Y, '1,0' is ω-Y, '0,0' is 0-Y;\n";
+tips+="2. '0' is 0-Y, '1' is 1-Y, '2' is 2-Y, '3' is 3-Y etc.;\n";
+tips+="3. '0,1' is 1~Y(n~Y means n row Y), '0,2' is 2~Y, '0,3' is 3~Y etc.;\n";
+tips+="4. '0,1,0' is ω~Y(0-Y), '0,1,1' is ω+1~Y, '0,2,0' is ω2~Y, '0,1,0,0' is ω^2~Y(1-Y), '0,2,3,1' is ω^2*2+ω*3+1~Y etc.;\n";
+tips+="5. '0,1' is 1~Y, then '0,0,0,1' is 1~Y-Y, it meas the dimension sequence of 1~Y-Y expand as 1~Y, actually 1~Y-Y is ω-Y;\n";
+tips+="6. '0,2' is 2~Y, then '0,0,0,2' is 2~Y-Y, '0,0,0,0,0,2' is 2~Y-Y-Y etc. '1' is 1-Y, then '0,0,1' is 1-Y-Y, '0,0,0,0,1' is 1-Y-Y-Y etc.;\n";
+tips+="7. '1,0,1' is X-Y, '0,0,1,0,1' is X-Y-Y, it\'s still X-Y;\n";
+tips+="8. '2,0' is LPrSS-Y, '0,0,2,0' is LPrSS-Y-Y etc..\n";
+function match(d){
+  if (d=="NaN") return "ω-"
+  if (d.length==1) return d[0]+"~"
+  var x="~"
+  for (var i=d.length-1;;i--){
+    if (d[i]==0) continue
+    var j=d.length-1-i
+    if (i==d.length-1) x=d[i]+x
+    if (i==d.length-2&&d[i]==1) x="ω"+x
+    if (i==d.length-2&&d[i]>1) x="ω*"+d[i]+x
+    if (i<d.length-2&&d[i]==1) x="ω^"+j+x
+    if (i<d.length-2&&d[i]>1) x="ω^"+j+"*"+d[i]+x
+    if (i==0) break
+    x="+"+x
+  }
+  return x
+}
+function check(d){
+  if (d=="NaN") return "ω-"
+  if (d.length==1) return d[0]+"-"
+  if (d.length==3&&d[0]==1&&d[1]==0&&d[2]==1) return "X-"
+  if (d.length>3&&d.length%2==1&&d[d.length-3]==1&&d[d.length-2]==0&&d[d.length-1]==1){
+    var sign=true
+    for (var i=0;i<d.length-3;i++) if (d[i]>0) sign=false
+    if (sign) return "X-"
+  }
+  if (d.length==2&&d[0]==0&&d[1]==0) return "0-"
+  if (d.length>2&&d[0]==0&&d[1]==0) return check(d.slice(2))+"Y-"
+  if (d.length==2&&d[0]==2&&d[1]==0) return "LPrSS-"
+  if (d.length==2&&d[0]==2&&d[1]>0) return "LPrSS(limit"+d[1]+")-"
+  if (d.length>1&&d[0]==0&&d[1]>0) return match(d.slice(1))
+  return "ω-"
+}
+function showTips(){
+  alert(tips)
+}
 function expandall(){
   if (input==dg("input").value&&inputn==dg("inputn").value&&inputd==dg("inputd").value&&inputm==dg("inputm").checked) return;
   input=dg("input").value;
@@ -318,6 +362,7 @@ function expandall(){
   mt="";
   dg("output").value=input.split(lineBreakRegex).map(e=>expandmultilimited(e,inputn,inputd)).join("\n");
   dg("mt").innerHTML=mt
+  dg("h1").innerHTML=check(inputd.split(itemSeparatorRegex).map(e=>{return Number(e)}))+"Y Sequence"
 }
 window.onpopstate=function (e){
   load();
