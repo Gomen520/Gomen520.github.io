@@ -172,12 +172,7 @@ function getBootIndex(s,d){
   return [b.cloumn,b.idx]
 }
 function copyElement(m,b,t,it,op,i,d){
-  if (it.value<=1&&it.row.length>1){
-    var p=it.head.parent
-    if ('foot' in p&&compareRow(p.foot.row,it.row)<=0) p=p.foot
-    while (p.value>1) p=p.parent
-    it.parent=p
-  }
+  if (it.value<=1&&it.row.length>1) it.parent=it.ref
   var min_row=it.row.length>1?getFootRow(op[op.length-1],d):[1],max_row=it.row
   if (it.no>0){
     var c=it.ref.cloumn+(t.cloumn-b.cloumn)*(i+1)
