@@ -1,0 +1,23 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ε-Y Sequence</title>
+  <script src="./epsilon.js"></script>
+</head>
+<body>
+  <h1><span id="h1">ε-Y Sequence</span></h1>
+  <form name=form>
+    <textarea id="input" style="width:calc(100% - 8px);height:calc(100% - 28px);text-align:left;white-space:nowrap;margin:0;border:1px solid black;resize:both;font-family:monospace;font-size:13.5px;padding:4px;" oninput="requestAnimationFrame(expandall)" contentEditable>1,4</textarea>
+    <input id="inputn" type="text" oninput="requestAnimationFrame(expandall)" value="2"></input>
+    <input id="inputd" type="text" oninput="requestAnimationFrame(expandall)" value="1,0,1" style="display: none;"></input>
+    <input id="inputm" type="checkbox" oninput="requestAnimationFrame(expandall)" style="display: none;">Display dimension mountain</input>
+  </form>
+  <textarea id="output" style="width:calc(100% - 8px);height:calc(100% - 28px);text-align:left;white-space:pre;margin:0;border:1px solid black;resize:both;font-family:monospace;font-size:13.5px;padding:4px;" readonly></textarea>
+  <div>"ε-Y sequence designed by Gomen"</div>
+  <div>Version test 1.0</div>
+  <div id="mt"></div>
+</body>
+</html>
