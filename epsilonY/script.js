@@ -201,13 +201,16 @@ function copyElement(m,b,t,it,op,i,d,f=true){
     else var c=t.cloumn+i
     var r=m[c][0]
     while ('foot' in r&&r.foot.id<=it.ref.id) r=r.foot
-    if (it.foot==undefined||compareRow(rowDifference(it.row,it.ref.row),[1,2])<0) max_row=rowAddition(r.row,rowDifference(it.row,it.ref.row))
-    else max_row=rowAddition(r.row,rowDifference(expand(toSequence(rowDifference(it.foot.row,it.ref.row)),it.ref.row.length+it.row.length+i,[0],false),it.ref.row))
+    var fr
+    if (it.foot==undefined) fr=getFootRow(it,d)
+    else fr=it.foot.row
+    if (compareRow(rowDifference(it.row,it.ref.row),[1,2])<0) max_row=rowAddition(r.row,rowDifference(it.row,it.ref.row))
+    else max_row=rowAddition(r.row,rowDifference(expand(toSequence(rowDifference(fr,it.ref.row)),it.ref.row.length+i+1,[0],false),it.ref.row))
   }
   if (it.cloumn==t.cloumn&&it.idx==t.idx&&compareRow(rowDifference(it.row,it.ref.row),[1,2])>=0){
     var p=t.parent
     t.parent=b
-    max_row=rowAddition(r.row,rowDifference(expand(toSequence(rowDifference(getFootRow(t,d),t.ref.row)),it.ref.row.length+it.row.length+i,[0],false),t.ref.row))
+    max_row=rowAddition(r.row,rowDifference(expand(toSequence(rowDifference(getFootRow(t,d),t.ref.row)),it.ref.row.length+i+1,[0],false),t.ref.row))
     t.parent=p
     //console.log(rowDifference(a=getFootRow(t,d),t.ref.row),max_row,min_row)
   }
