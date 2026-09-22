@@ -50,6 +50,11 @@ function rowAddition(r1,r2){
 function rowDifference(r1,r2){
   var i=0
   for (;i<r1.length;i++) if (r1[i]<r2[i]) break
+  if (i<r2.length&&r2[i]>1){
+    var j=i-1
+    while (r2[j]>1) j--
+    if (j>0) i=j
+  }
   return r2.slice(i)
 }
 function getFootRow(it,d){
@@ -117,7 +122,11 @@ function copyElement(m,b,t,it,op,i,d,f){
     var c=it.ref.cloumn+(t.cloumn-b.cloumn)*(i+1)
     var r=m[c][0]
     while ('foot' in r&&r.foot.id<=it.ref.id) r=r.foot
-    if ('offset' in it) max_row=rowAddition(r.row,it.offset)
+    if ('offset' in it){
+      var ref=r
+      //while (compareRow(r.row.slice(ref.ref.row.length),it.offset)<0) ref=ref.ref
+      max_row=rowAddition(ref.row,it.offset)
+    }
     else max_row=r.row.concat(it.offsets[i])
   }
   else {
@@ -194,7 +203,7 @@ function expandDimensionSequnece(m,b,t,n,d){
       if (compareRow(rowDifference(it.ref.row,it.row),[2])<0) {it.offset=rowDifference(it.ref.row,it.row);continue}
       var tp=getTpElement(m,t,it.no)
       if (compareRow(it.row,tp.row)>=0) {it.max_row=it.row;continue}
-      if (tp.n<it.bs+tp.head.bs*n) {tp.n=it.bs+tp.head.bs*n;tp.ex=expand(toSequence(tp.row),tp.n,d,false)}
+      if (tp.n<it.bs+tp.head.bs*n+it.row.length-tp.row.length) {tp.n=it.bs+tp.head.bs*n+it.row.length-tp.row.length;tp.ex=expand(toSequence(tp.row),tp.n,d,false)}
       if (compareRow(it.row,tp.ex,it.row.length-1)==0&&compareRow(it.row,it.ref.row)>0) {it.max_row=tp.ex;continue}
       var is=toSequence(it.row),ts=toSequence(tp.row),idx=getBootIndex(ts,d)
       if (compareRow(it.row,tp.row.slice(0,idx+1))<=0) {it.offset=rowDifference(it.ref.row,it.row);continue}
@@ -207,7 +216,7 @@ function expandDimensionSequnece(m,b,t,n,d){
       it.offsets=[]
       var si=it.bs>0||tp.head.br.cloumn==t.cloumn?it.ref.row.length:b.row.length
       for (var k=1;k<=n;k++){
-        it.offsets.push(ex.slice(si+k*(seq.length-1-idx),is.length+k*(seq.length-1-idx)))
+        it.offsets.push(ex.slice(si+k*(seq.length-1-idx)*tp.head.bs,is.length+k*(seq.length-1-idx)*tp.head.bs))
       }
     }
   }
