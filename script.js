@@ -371,4 +371,11 @@ var handlekey=function(e){
   //setTimeout(expandall,0,true);
 }
 //console.log=function (s){alert(s)};
+var _hmt = _hmt || [];
+(function() {
+  var hm = document.createElement("script");
+  hm.src = "https://hm.baidu.com/hm.js?6a191354033fbed37c7c9b81a37657d6";
+  var s = document.getElementsByTagName("script")[0]; 
+  s.parentNode.insertBefore(hm, s);
+})();
 window.onerror=function (e,s,l,c,o){alert(JSON.stringify(e+"\n"+s+":"+l+":"+c+"\n"+o.stack))}
