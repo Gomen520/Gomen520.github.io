@@ -287,7 +287,7 @@ var handlekey=function(e){
 var _hmt = _hmt || [];
 (function() {
   var hm = document.createElement("script");
-  hm.src = "https://hm.baidu.com/hm.js?6a191354033fbed37c7c9b81a37657d6";
+  hm.src = "https://hm.baidu.com/hm.js?e9c8888b5eb46fb821cad8215d30ff70";
   var s = document.getElementsByTagName("script")[0]; 
   s.parentNode.insertBefore(hm, s);
 })();
