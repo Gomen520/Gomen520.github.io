@@ -113,7 +113,9 @@ function drawMountain(s,d){
 }
 function copyElement(m,b,t,it,op,i,d,f){
   var pt=it.parent
-  if (it.ref.value==it.value) it.parent=it.ref
+  if (it.row.length>1) it.parent=it.head.parent
+  if ('foot' in it.parent&&compareRow(it.parent.foot.row,it.row)<=0) it.parent=it.parent.foot
+  while (it.parent.value>it.value) it.parent=it.parent.parent
   var min_row=it.row.length>1?getFootRow(op[op.length-1],d):[1],max_row=it.row
   var tp=getTpElement(m,t,it.no)
   if (tp.no>it.no) tp=tp.head
@@ -122,11 +124,7 @@ function copyElement(m,b,t,it,op,i,d,f){
     var c=it.ref.cloumn+(t.cloumn-b.cloumn)*(i+1)
     var r=m[c][0]
     while ('foot' in r&&r.foot.id<=it.ref.id) r=r.foot
-    if ('offset' in it){
-      var ref=r
-      //while (compareRow(r.row.slice(ref.ref.row.length),it.offset)<0) ref=ref.ref
-      max_row=rowAddition(ref.row,it.offset)
-    }
+    if ('offset' in it) max_row=rowAddition(r.row,it.offset)
     else max_row=r.row.concat(it.offsets[i])
   }
   else {
